@@ -1,12 +1,11 @@
 const HISTORY_LENGTH = 3;
-const USER = '';
-const PASS = '';
-const HOST = '';
-
-let History = {};
+let HOST = '';
+let USER = '';
+let PASS = '';
+let HISTORY = {};
 
 function getHistoryByLp() {
-    const flatHistory = Object.values(History);
+    const flatHistory = Object.values(HISTORY);
     let result = [];
 
     flatHistory.forEach((lp) => {
@@ -17,15 +16,15 @@ function getHistoryByLp() {
 };
 
 function updateHistoryPrices(price) {
-    if (!History.hasOwnProperty(price.lp)) {
-        History[price.lp] = []
+    if (!HISTORY.hasOwnProperty(price.lp)) {
+        HISTORY[price.lp] = []
     }
 
-    if (History[price.lp].length == HISTORY_LENGTH) {
-        History[price.lp].pop();
+    if (HISTORY[price.lp].length == HISTORY_LENGTH) {
+        HISTORY[price.lp].pop();
     }
 
-    History[price.lp].unshift(price);
+    HISTORY[price.lp].unshift(price);
 }
 
 function renderHistory(lp) {
@@ -35,7 +34,7 @@ function renderHistory(lp) {
 }
 
 function animateChange(side, lp) {
-    if (History[lp].length < 2) {
+    if (HISTORY[lp].length < 2) {
         return
     }
 
@@ -44,9 +43,9 @@ function animateChange(side, lp) {
 
     const td = document.getElementById(sideLp);
 
-    if (History[lp][0][side] < History[lp][1][side]) {
+    if (HISTORY[lp][0][side] < HISTORY[lp][1][side]) {
         style = 'table-danger'
-    } else if (History[lp][0][side] > History[lp][1][side]) {
+    } else if (HISTORY[lp][0][side] > HISTORY[lp][1][side]) {
         style = 'table-success'
     } else {
         style = 'table-active'
@@ -66,6 +65,10 @@ nats.subscribe('arbito.prices.*', (msg, reply, subj) => {
     price.lp = subjSplit[subjSplit.length - 1];
     price.timestamp = moment().format();
 
+    price.bid = price.bid.toFixed(5);
+    price.ask = price.ask.toFixed(5);
+    price.mid = price.mid.toFixed(5);
+
     updateHistoryPrices(price);
 
     // async to offload the computation
@@ -73,6 +76,7 @@ nats.subscribe('arbito.prices.*', (msg, reply, subj) => {
         renderHistory();
         animateChange('bid', price.lp);
         animateChange('ask', price.lp);
+        animateChange('mid', price.lp);
     }, 0);
 });
 
