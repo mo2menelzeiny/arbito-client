@@ -1,7 +1,7 @@
 const HISTORY_LENGTH = 3;
-let HOST = '';
-let USER = '';
-let PASS = '';
+let HOST = '45.32.179.168';
+let USER = 'username';
+let PASS = 'password';
 let HISTORY = {};
 
 function getHistoryByLp() {
@@ -13,7 +13,7 @@ function getHistoryByLp() {
     });
 
     return result;
-};
+}
 
 function updateHistoryPrices(price) {
     if (!HISTORY.hasOwnProperty(price.lp)) {
@@ -64,10 +64,9 @@ nats.subscribe('arbito.prices.*', (msg, reply, subj) => {
     let subjSplit = subj.split('.');
     price.lp = subjSplit[subjSplit.length - 1];
     price.timestamp = moment().format();
-
     price.bid = price.bid.toFixed(5);
     price.ask = price.ask.toFixed(5);
-    price.mid = price.mid.toFixed(5);
+    price.spread = (price.ask - price.bid).toFixed(5);
 
     updateHistoryPrices(price);
 
@@ -76,15 +75,5 @@ nats.subscribe('arbito.prices.*', (msg, reply, subj) => {
         renderHistory();
         animateChange('bid', price.lp);
         animateChange('ask', price.lp);
-        animateChange('mid', price.lp);
     }, 0);
 });
-
-
-
-
-
-
-
-
-
